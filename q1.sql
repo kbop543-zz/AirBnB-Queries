@@ -16,7 +16,7 @@ from BookingRequest
 where startdate >= (current_date - interval '1 year' * 10)
 group by travelerId, date_part('year', startdate);
 
-SELECT TotalRequests.travelerId, TotalRequests.year, coalesce(TotalRequests.numRequests, 0), coalesce(TotalBookings.numBooking, 0)
+SELECT TotalRequests.travelerId, TotalRequests.year, coalesce(TotalRequests.numRequests, 0) as numRequests, coalesce(TotalBookings.numBooking, 0) as numBooking
 FROM TotalBookings FULL OUTER JOIN TotalRequests ON TotalRequests.travelerId = TotalBookings.travelerId;
 
 
