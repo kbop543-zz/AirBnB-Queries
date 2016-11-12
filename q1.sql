@@ -28,6 +28,6 @@ CREATE VIEW STEP1 AS
 CREATE VIEW STEP2 AS
 	SELECT STEP1.travelerId, STEP1.email, STEP1.year, STEP1.numRequests, coalesce(TotalBookings.numBooking, 0) as numBooking
 	FROM STEP1 LEFT JOIN TotalBookings ON STEP1.travelerId = TotalBookings.travelerId
-	ORDER BY STEP1.year;
+	ORDER BY STEP1.year DESC;
 
 SELECT * FROM STEP2;
