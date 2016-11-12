@@ -1,8 +1,5 @@
 SET search_path TO bnb, public;
 
-DROP VIEW ScratchingBacks1 CASCADE;
-DROP VIEW ScratchingBacks2 CASCADE;
-
 -- Count of reciprocals
 CREATE VIEW ScratchingBacks1 AS 
 SELECT Traveler.travelerID, count(*) AS reciprocals
@@ -33,7 +30,8 @@ GROUP BY Traveler.travelerID;
 -- Combine TravelerID with reciprocals and recriprocals that differ by one point or less
 SELECT ScratchingBacks1.travelerID, reciprocals, backScratches
 FROM ScratchingBacks1, ScratchingBacks2
-WHERE ScratchingBacks1.travelerID = ScratchingBacks2.travelerID;
+WHERE ScratchingBacks1.travelerID = ScratchingBacks2.travelerID
+ORDER BY reciprocals DESC, backScratches DESC;
 
-
-
+DROP VIEW IF EXISTS ScratchingBacks1 CASCADE;
+DROP VIEW IF EXISTS ScratchingBacks2 CASCADE;
