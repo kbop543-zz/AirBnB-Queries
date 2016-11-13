@@ -1,10 +1,20 @@
 SET search_path TO bnb, public;
 
+/* CORRECTION: https://piazza.com/class/isyrturax8v7iu?cid=362
+
+Q5, Q8:  Clarification on HomeownerRating and TravelerRating: The HomeownerRating contains the ratings 
+the homeowner makes (of a traveler) and the TravelerRating contains the ratings a traveler makes (of the homeowner). 
+
+*/
+
 -- List of all homeowners and their bnb ratings
 CREATE VIEW Glue AS
-SELECT Listing.owner, HomeownerRating.rating
-FROM Listing, HomeownerRating
-WHERE Listing.listingID = HomeownerRating.listingID;
+-- SELECT Listing.owner, HomeownerRating.rating
+-- FROM Listing, HomeownerRating
+-- WHERE Listing.listingID = HomeownerRating.listingID;
+SELECT Listing.owner, TravelerRating.rating
+FROM Listing, TravelerRating
+WHERE Listing.listingID = TravelerRating.listingID;
 
 -- Count of 5 star homeowner ratings
 CREATE VIEW rating5 AS
