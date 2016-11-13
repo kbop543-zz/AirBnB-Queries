@@ -55,7 +55,7 @@ INSERT INTO Homeowner VALUES (4001, 'hn2', 'hf2', 'hfn2@domain.com');
 
 INSERT INTO Listing VALUES (3000, 'condo', 2, 4, 'gym', 'Toronto', 4000);
 INSERT INTO Listing VALUES (3001, 'house', 2, 4, 'gym', 'Kingston', 4001);
-INSERT INTO Listing VALUES (300, 'house', 2, 4, 'gym', 'c2', 4001);
+INSERT INTO Listing VALUES (3002, 'house', 2, 4, 'gym', 'Waterloo', 4001);
 
 INSERT INTO BookingRequest VALUES (6000, 1000, 3000, '2016-10-05', 2, 1, 100);
 INSERT INTO BookingRequest VALUES (6001, 1000, 3000, '2016-10-16', 4, 1, 120);
@@ -77,7 +77,9 @@ INSERT INTO BookingRequest VALUES (6009, 1001, 3000, '2016-04-16', 4, 1, 120);
 
 INSERT INTO Booking VALUES (3000, '2016-12-20', 1000, 20, 1, 20);
 INSERT INTO Booking VALUES (3000, '2016-01-05', 1001, 15, 1, 12);
+INSERT INTO Booking VALUES (3000, '2016-01-02', 1001, 15, 1, 12);
 INSERT INTO Booking VALUES (3001, '2010-05-05', 1001, 1825, 1, 10);
+INSERT INTO Booking VALUES (3002, '2010-02-05', 1003, 100, 1, 10);
 
 
 
@@ -88,6 +90,7 @@ INSERT INTO Booking VALUES (3001, '2010-05-05', 1001, 1825, 1, 10);
 
 INSERT INTO CityRegulation VALUES ('Toronto', 'condo', 'min', 30);
 INSERT INTO CityRegulation VALUES ('Kingston', 'house', 'max', 90);
+--INSERT INTO CityRegulation VALUES ('Waterloo', '', 'max', 90);
 
 --INSERT INTO TravelerRating VALUES (3000, '2016-10-05', 4, 'cmt3');
 
