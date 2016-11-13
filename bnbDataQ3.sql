@@ -74,12 +74,15 @@ INSERT INTO BookingRequest VALUES (6009, 1001, 3000, '2016-04-16', 4, 1, 120);
 
 --INSERT INTO BookingRequest VALUES (6002, 1001, 3001, '2016-01-05', 10, 1, 75);
 --INSERT INTO BookingRequest VALUES (6003, 1002, 300, '2014-05-05', 10, 1, 75);
-
-INSERT INTO Booking VALUES (3000, '2016-12-20', 1000, 20, 1, 20);
-INSERT INTO Booking VALUES (3000, '2016-01-05', 1001, 15, 1, 12);
-INSERT INTO Booking VALUES (3000, '2016-01-02', 1001, 15, 1, 12);
+--should go into 2017
+INSERT INTO Booking VALUES (3000, '2016-12-20', 1000, 20, 1, 20); 
+-- should stay in its year but overlap with the one below
+INSERT INTO Booking VALUES (3000, '2016-01-02', 1001, 15, 1, 12); 
+-- should stay in its year but overlap with the booking on 2016-01-05
+INSERT INTO Booking VALUES (3000, '2016-01-02', 1001, 15, 1, 12); 
+--should span 5 years
 INSERT INTO Booking VALUES (3001, '2010-05-05', 1001, 1825, 1, 10);
-INSERT INTO Booking VALUES (3002, '2010-02-05', 1003, 100, 1, 10);
+--INSERT INTO Booking VALUES (3002, '2010-02-05', 1003, 100, 1, 10);
 
 
 
