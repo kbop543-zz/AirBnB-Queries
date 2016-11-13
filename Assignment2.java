@@ -44,6 +44,7 @@ public class Assignment2 {
         String set_path = "SET search_path TO bnb";
         PreparedStatement prepared_statement = connection.prepareStatement(set_path);
         prepared_statement.execute();
+        return true;
       } catch (SQLException e) {
         e.printStackTrace();
         return false;
@@ -90,7 +91,7 @@ public class Assignment2 {
    /**
     * Records the fact that a booking request has been accepted by a 
     * homeowner. 
-    *
+    *WHERE startYear != endYear 
     * If a booking request was made and the corresponding booking has not been
     * recorded, records it by adding a row to the Booking table, and returns 
     * true. Otherwise, returns false. 
@@ -108,7 +109,11 @@ public class Assignment2 {
 
    public static void main(String[] args) {
       // You can put testing code in here. It will not affect our autotester.
+      Assignment2 a2 = new Assignment2();
+      String url = "jdbc:postgresql://localhost:5432/csc343h-steph191";
+      a2.connectDB(url,"steph191","");
       System.out.println("Boo!");
+      a2.disconnectDB();
    }
 
 }
