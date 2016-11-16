@@ -108,10 +108,80 @@ public class Assignment2 {
     * @param  homeownerID   id of the homeowner
     * @return               a list of the 10 most similar homeowners
     */
-   public ArrayList homeownerRecommendation(int homeownerID) {
+   public HashMap homeownerRecommendation(int homeownerID) {
       // Implement this method!
-      return null;
+                                
+      
+      try{
+        
+        HashMap<Integer, HashMap<Integer, Float>> map = new HashMap<Integer, HashMap<Integer, Float>>();
+        //ArrayList<String> homeowner = new ArrayList<String>();  
+        //int count = selectTravelerID();                         
+        String queryString = "CREATE VIEW travelers AS \n"+
+"SELECT Traveler.TravelerId, Booking.listingId \n" +
+"FROM Traveler LEFT OUTER JOIN Booking ON Traveler.travelerID=Booking.travelerId \n"+
+"GROUP BY Traveler.travelerID, Booking.listingID \n"+
+"order by traveler.travelerID;\n\n"+ 
+
+
+"CREATE VIEW average AS \n"+
+"SELECT Travelers.TravelerId, travelers.listingId,avg(coalesce(TravelerRating.rating,0)) AS avg \n"+
+"FROM Travelers LEFT OUTER JOIN TravelerRating ON TravelerRating.listingID=Travelers.listingId \n"+
+"GROUP BY Travelers.travelerID,travelers.listingId \n"+
+"order by travelers.travelerID;\n"+
+
+"CREATE VIEW homeowners AS \n"+
+"SELECT homeowner.homeownerid,listing.listingid FROM homeowner LEFT OUTER JOIN listing ON listing.owner = homeowner.homeownerid \n"+
+"GROUP BY homeowner.homeownerid,listing.listingid;\n \n"+
+"CREATE VIEW rating AS \n"+
+"SELECT homeowners.homeownerid,average.travelerid,coalesce(average.avg,0)::float as avg \n"+
+"FROM homeowners LEFT OUTER JOIN average ON homeowners.listingid = average.listingid \n"+
+"GROUP BY homeowners.homeownerid,average.travelerid,average.avg; \n"+
+"SELECT * \n"+
+ "FROM rating; \n";
+
+ System.out.println(queryString);
+
+      PreparedStatement ps = connection.prepareStatement(queryString);      
+
+      ResultSet rs = ps.executeQuery();
+      ResultSetMetaData rsmd = rs.getMetaData();
+      System.out.println(rsmd); 
+
+                           
+
+      while(rs.next()){                                       
+        int homeowner = rs.getInt("homeownerid"); 
+         System.out.println(homeowner);
+        int traveler = rs.getInt("travelerid");
+         System.out.println(traveler);
+        float avg =rs.getFloat("avg");
+         System.out.println(avg);
+
+        HashMap<Integer, Float> val = new HashMap<Integer, Float>();
+        val.put(traveler,avg);
+         System.out.println(val);
+        map.put(homeowner,val);                                    
+
+      }
+      /*Object scores = map.get(homeownerID); //get the scores for the homeowner specified
+      map.remove(homeownerID); //remove that homeowner from hashmap
+
+      Iterator it = map.entrySet().iterator();
+      while (it.hasNext()) {
+
+        Map.Entry pair = (Map.Entry)it.next();*/
+        System.out.println(map);
+        return map;
+
+
+        
+
+                                           
+    } catch (SQLException s){                                 
+      return null; 
    }
+ }
 
 
    /**
@@ -143,6 +213,9 @@ public class Assignment2 {
       a2.connectDB(url,"steph191","");
       
       a2.selectTravelerId();
+
+      a2.homeownerRecommendation(4001);
+
       a2.disconnectDB();
    }
 
