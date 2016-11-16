@@ -137,7 +137,7 @@ public class Assignment2 {
   // You can put testing code in here. It will not affect our autotester.
 
     //HEY SUNNY!: to run this program type 'javac Assignment2.java' in terminal
-    //then type 'java -cp /local/packages/jdbc-postgresql/postgresql-9.4.1208.jre6.jar: Assignment2'
+    //then type 'java -cp /local/packages/jdbc-postgresql/postgresql-9.4.1212.jar: Assignment2'
       Assignment2 a2 = new Assignment2();
       String url = "jdbc:postgresql://localhost:5432/csc343h-steph191";
       a2.connectDB(url,"steph191","");
