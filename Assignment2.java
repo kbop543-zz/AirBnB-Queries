@@ -113,10 +113,9 @@ public class Assignment2 {
                                 
       
       try{
-        
+        //hashmap of hashmaps
         HashMap<Integer, HashMap<Integer, Float>> map = new HashMap<Integer, HashMap<Integer, Float>>();
-        //ArrayList<String> homeowner = new ArrayList<String>();  
-        //int count = selectTravelerID();                         
+        //whole query                    
         String queryString = "CREATE VIEW travelers AS \n"+
 "SELECT Traveler.TravelerId, Booking.listingId \n" +
 "FROM Traveler LEFT OUTER JOIN Booking ON Traveler.travelerID=Booking.travelerId \n"+
@@ -142,26 +141,35 @@ public class Assignment2 {
 
  System.out.println(queryString);
 
-      PreparedStatement ps = connection.prepareStatement(queryString);      
+      PreparedStatement ps = connection.prepareStatement(queryString);  
+      
 
       ResultSet rs = ps.executeQuery();
-      ResultSetMetaData rsmd = rs.getMetaData();
-      System.out.println(rsmd); 
+      
+  
 
-                           
-
-      while(rs.next()){                                       
+      while(rs.next()){   
+        //grab values from query                             
         int homeowner = rs.getInt("homeownerid"); 
-         System.out.println(homeowner);
+         
         int traveler = rs.getInt("travelerid");
-         System.out.println(traveler);
+         
         float avg =rs.getFloat("avg");
-         System.out.println(avg);
+         
 
         HashMap<Integer, Float> val = new HashMap<Integer, Float>();
-        val.put(traveler,avg);
-         System.out.println(val);
-        map.put(homeowner,val);                                    
+        val.put(traveler,avg); 
+
+ 
+        map.put(homeowner,val);  
+
+        //I am formatting the dictionary like so {'4001':{[1002,1.5],[1001,1.4]},
+        //'4002':{[1002,1.5],[1001,1.4]}....etc} so that to calculate the dot product
+        //,we can just iterate through the hashmap like so: scores.get(1002).value * val.get(1002).value +  
+        //scores.get(1003).value * val.get(1004).value...etc to get the dot products 
+        //where 'scores' is the score of the homeowner specified by this funtions parameter
+        //Below is where I tried to iterae through the map but for some reason
+        //execute query isn't working.                         
 
       }
       /*Object scores = map.get(homeownerID); //get the scores for the homeowner specified
@@ -171,6 +179,7 @@ public class Assignment2 {
       while (it.hasNext()) {
 
         Map.Entry pair = (Map.Entry)it.next();*/
+
         System.out.println(map);
         return map;
 
