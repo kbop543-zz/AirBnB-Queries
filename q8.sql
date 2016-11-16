@@ -1,7 +1,5 @@
 SET search_path TO bnb, public;
 
-
-
 -- Count of reciprocals
 CREATE VIEW ScratchingBacks1 AS 
 SELECT Traveler.travelerID, count(Traveler.travelerID) AS reciprocals
