@@ -23,8 +23,8 @@ from BookingRequest;
 CREATE VIEW RequestsNotInBooking AS
 SELECT travelerId,listingId, count(distinct requestID) as numRequests
 FROM BookingRequest
-WHERE listingID NOT IN(
-SELECT listingID
+WHERE travelerId  NOT IN(
+SELECT travelerID
 FROM Booking)
 group by travelerId, listingId;
 
