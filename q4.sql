@@ -23,7 +23,6 @@ ORDER BY
 	Listing.owner, date_part('year', TravelerRating.startDate);
 
 
-
 CREATE VIEW NonDecreasing AS
 SELECT DISTINCT R1.owner
 FROM RatedInLastTen AS R1, RatedInLastTen AS R2
@@ -50,22 +49,14 @@ CREATE VIEW NumRatedInLastTen AS
 SELECT COUNT (DISTINCT owner) FROM RatedInLastTen; 
 
 
-
 -- Solution
 SELECT
-	CAST(CAST(NumImproving.count AS FLOAT) / CAST(NumRatedInLastTen.count AS FLOAT)*100 AS FLOAT) AS percentage
+	ROUND(CAST(NumImproving.count AS FLOAT) / CAST(NumRatedInLastTen.count AS FLOAT)*100) AS percentage
 FROM 
 	NumRatedInLastTen, NumImproving;
 
 
-/*
-SELECT * FROM NumRatedInLastTen;
-SELECT * FROM NumImproving;
-SELECT * FROM RatedInLastTen; 
-SELECT * FROM NonDecreasing;
-SELECT * FROM AlwaysImproving;
-*/
-
+-- Clear views
 DROP VIEW IF EXISTS NumRatedInLastTen CASCADE;
 DROP VIEW IF EXISTS NumImproving CASCADE;
 DROP VIEW IF EXISTS AlwaysImproving CASCADE;
