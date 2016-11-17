@@ -205,14 +205,14 @@ String q5 = "SELECT * FROM rating; ";
 
       }
       
-      Object scores = map.get(homeownerID); //get the scores for the homeowner specified
+    /*  Object scores = map.get(homeownerID); //get the scores for the homeowner specified
       map.remove(homeownerID); //remove that homeowner from hashmap
 
       Iterator it = map.entrySet().iterator();
       while (it.hasNext()) {
 
-        Map.Entry pair = (Map.Entry)it.next();
-        }
+        map.Entry pair = (map.Entry)it.next();
+        }*/
 
        System.out.println(map);
        //System.out.println(travelers);
