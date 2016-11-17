@@ -1,193 +1,156 @@
 SET search_path TO bnb, public;
 
-DROP VIEW IF EXISTS TEST2;
-DROP VIEW IF EXISTS OverlappingYearsMax;
-DROP VIEW IF EXISTS OverlappingYearsMin;
-DROP VIEW IF EXISTS AllMin;
-DROP VIEW IF EXISTS AllMax;
 
---get ownerid,listingid,enddate of the listing,startdate of the
---listing, the city of the listing, regulationtype(min) 
-CREATE VIEW AllMin AS
-SELECT 
-    Listing.owner, 
-    Booking.listingID, 
-    (Booking.startdate +  interval '1 day' * Booking.numNights) as endDate, 
-    Booking.startdate AS startDate, 
-    Listing.city,
-    CityRegulation.regulationType AS type
-FROM 
-    Listing,
-    Booking,
-    CityRegulation
-WHERE 
-    CityRegulation.regulationType = 'min' AND 
-    Booking.listingID = Listing.listingID AND 
-    CityRegulation.city = Listing.city AND
-    (Listing.propertyType = CityRegulation.propertyType OR 
-    Listing.propertyType = null);
-
---get ownerid,listingid,enddate of the listing,startdate of the
---listing, the city of the listing, regulationtype(max) 
-CREATE VIEW  AllMax AS
-SELECT 
-    Listing.owner, 
-    Booking.listingID, 
-    (Booking.startdate + interval '1 day' * Booking.numNights) AS endDate, 
-    Booking.startdate AS startDate, 
-    Listing.city,CityRegulation.regulationType AS type
-FROM 
-    Listing, Booking, CityRegulation
-WHERE 
-    CityRegulation.regulationType = 'max' AND
-    Booking.listingID = Listing.listingID AND 
-    CityRegulation.city = Listing.city AND 
-    (Listing.propertyType = CityRegulation.propertyType OR 
-    Listing.propertyType = null);
-
-
-SELECT * FROM ALLMin;
-SELECT * FROM AllMax;
-
-
-/*
-SELECT * 
-FROM OverlappingYearsMin t1, OverlappingYearsMin t2
-WHERE t1.listingId = t2.listingId and 
-
-SELECT * 
-FROM OverlappingYearsMax
-WHERE 
-
---TRYING TO DO OVERLAP BUT IT WONT WORK 
-
-
---only get listings that don't overlap
-CREATE VIEW OverlappingYearsMin AS
-SELECT * 
-FROM AllMin AS t1 CROSS JOIN AllMin AS t2
-WHERE t1.startDate != t2.startDate and t1.endDate != t2.endDate 
-and ((t1.startDate,t1.endDate) OVERLAPS (t2.startDate,t2.endDate)) = false;
-
-CREATE VIEW OverlappingYearsMax AS
-SELECT * 
-FROM AllMax AS t1 CROSS JOIN AllMax AS t2
-WHERE t1.startDate != t2.startDate and t1.endDate != t2.endDate and
-((t1.startDate,t1.endDate) OVERLAPS (t2.startDate,t2.endDate)) = false;
-*/
-
-
-
--- SELECT * from OverlappingYearsMin;
--- SELECT * from OverlappingYearsMax;
-
-
-
--- Serializes days by year by listing
-CREATE VIEW TEST2 AS
-(SELECT  owner as homeowner, listingID, 
-generate_series(startDate,endDate,'1 day') as startDate,city,type
-FROM AllMin)
-UNION
-(SELECT  owner as homeowner, listingID, 
-generate_series(startDate,endDate,'1 day') as startDate,city,type
-FROM AllMax);
-
-
-SELECT 
-    homeowner, 
-    listingID, 
-    city,
-    date_part('year', startdate) AS year,
-    count(startdate) AS numDaysPerYear
+-- All Bookings and their start and end dates
+CREATE VIEW StartEndDatesByBookings AS
+SELECT
+	Booking.listingID,
+	Booking.travelerID, 
+	Booking.startdate, 
+	Booking.startdate + interval '1 day' * Booking.numNights as enddate,
+	Booking.numNights
 FROM
-    TEST2
-GROUP BY homeowner, listingID, city, date_part('year', startdate);
+	Booking;
+	
+
+-- Bookings that have overlapping listingIDs and dates
+-- NOTE: Booking Primary Key is (listingID, startdate)
+CREATE VIEW InvalidOverlaps AS
+SELECT Inv1.listingID, Inv1.travelerID, Inv1.startdate, Inv1.enddate, Inv1.numNights
+FROM StartEndDatesByBookings AS Inv1
+JOIN StartEndDatesByBookings AS Inv2
+ON Inv1.listingID = Inv2.listingID AND Inv1.startdate <> Inv2.startdate
+WHERE (Inv1.startdate > Inv2.startdate and Inv1.startdate < Inv2.enddate) OR
+	  (Inv1.enddate > Inv2.startdate and Inv1.enddate < Inv2.enddate);
 
 
-
-/*
-(SELECT  owner as homeowner, listingID, 
-generate_series(startDate,endDate,endDate-startDate) as startDate,city,type
-FROM OverlappingYearsMin
-WHERE startYear = endYear -1 )
-union
-(SELECT  owner as homeowner, listingID, 
-generate_series(startDate,endDate,'1 day') as startDate,city,type
-FROM OverlappingYearsMin
-WHERE startYear != endYear )
-union
-(SELECT  owner as homeowner, listingID, 
-generate_series(startDate,endDate,endDate-startDate) as startDate,city,type
-FROM OverlappingYearsMax
-WHERE startYear = endYear -1 )
-union
-(SELECT  owner as homeowner, listingID, 
-generate_series(startDate,endDate,'1 day') as startDate,city,type
-FROM OverlappingYearsMax
-WHERE startYear != endYear );
-*/
+-- All valid, non-overlapping bookings
+CREATE VIEW ValidBookings AS
+(SELECT * FROM StartEndDatesByBookings)
+EXCEPT
+(SELECT * FROM InvalidOverlaps);
 
 
+-- A generated series of valid booked days by listing
+CREATE VIEW BookingDaySeries AS
+SELECT 
+	listingID,
+	generate_series(startDate,endDate,'1 day') AS daySeries
+FROM ValidBookings;
 
 
+-- All valid booked days grouped by listing and year
+CREATE VIEW BookingDayGroups AS
+SELECT 
+    listingID,
+    date_part('year', daySeries) AS year,
+    count(daySeries) AS numDaysPerYear
+FROM BookingDaySeries
+GROUP BY 
+	listingID, 
+	date_part('year', daySeries);
 
 
+-- Owners who have violated the min days of a bylaw
+CREATE VIEW MinViolators AS
+SELECT
+	BookingDayGroups.listingID,
+	BookingDayGroups.year,
+	BookingDayGroups.numDaysPerYear,
+	Listing.owner,
+	Listing.propertyType,
+	Listing.city,
+	CityRegulation.regulationType,
+	CityRegulation.days
+FROM
+	BookingDayGroups, Listing, CityRegulation
+WHERE
+	BookingDayGroups.listingID = Listing.ListingID AND 
+	CityRegulation.city = Listing.city AND 
+	CityRegulation.propertyType = Listing.propertyType AND
+	CityRegulation.regulationType = 'min' AND
+	BookingDayGroups.numDaysPerYear < CityRegulation.days;
 
--- CREATE VIEW OneYear AS
--- (SELECT  owner as homeowner, listingID, 
--- startDate as startDate, ABS(startDate - date_trunc('year',endDate)) as days,city
--- FROM OverlappingYearsMin
--- WHERE startYear = endYear -1 )
--- union
--- (SELECT  owner as homeowner, listingID, 
--- date_trunc('year',endDate) as startDate, date_trunc('year',endDate) - endDate as days,city
--- FROM OverlappingYearsMin
--- WHERE startYear = endYear -1 )
--- union
--- (SELECT  owner as homeowner, listingID, 
--- startDate as startDate, ABS(startDate - date_trunc('year',endDate)) as days,city
--- FROM OverlappingYearsMax
--- WHERE startYear = endYear -1 )
--- union
--- (SELECT  owner as homeowner, listingID, 
--- date_trunc('year',endDate) as startDate, date_trunc('year',endDate) - endDate as days,city
--- FROM OverlappingYearsMax
--- WHERE startYear = endYear -1 )
+-- Owners that have violated the max days of a bylaw
+CREATE VIEW MaxViolators AS
+SELECT
+	BookingDayGroups.listingID,
+	BookingDayGroups.year,
+	BookingDayGroups.numDaysPerYear,
+	Listing.owner,
+	Listing.propertyType,
+	Listing.city,
+	CityRegulation.regulationType,
+	CityRegulation.days
+FROM
+	BookingDayGroups, Listing, CityRegulation
+WHERE
+	BookingDayGroups.listingID = Listing.ListingID AND 
+	CityRegulation.city = Listing.city AND 
+	CityRegulation.propertyType = Listing.propertyType AND
+	CityRegulation.regulationType = 'max' AND
+	BookingDayGroups.numDaysPerYear > CityRegulation.days;
+
+-- If Listing.propertyType is NULL, all bylaws apply to this listing (both max and min)
+CREATE VIEW NullViolators AS
+SELECT
+	BookingDayGroups.listingID,
+	BookingDayGroups.year,
+	BookingDayGroups.numDaysPerYear,
+	Listing.owner,
+	Listing.propertyType,
+	Listing.city,
+	CityRegulation.regulationType,
+	CityRegulation.days
+FROM
+	BookingDayGroups JOIN Listing ON BookingDayGroups.listingID = Listing.ListingID
+	JOIN CityRegulation ON Listing.city = CityRegulation.city AND
+	(CityRegulation.regulationType = 'max' AND BookingDayGroups.numDaysPerYear > CityRegulation.days) OR
+	(CityRegulation.regulationType = 'min' AND BookingDayGroups.numDaysPerYear < CityRegulation.days)
+WHERE 
+	Listing.propertyType IS NULL;	
 
 
+--Add all the violators together
+CREATE VIEW Solution AS 
+(SELECT
+	listingID,
+	year,
+	owner,
+	city
+FROM MinViolators)
+UNION
+(SELECT
+	listingID,
+	year,
+	owner,
+	city
+FROM MaxViolators)
+UNION
+(SELECT
+	listingID,
+	year,
+	owner,
+	city
+FROM NullViolators);
 
--- (SELECT  owner as homeowner, listingID, 
--- generate_series(startDate,endDate,'1 year') as startDate,city
--- FROM OverlappingYearsMin
--- WHERE endYear - startYear >= 2  )
--- union
--- (SELECT  owner as homeowner, listingID, 
--- generate_series(startDate,endDate,'1 year') as startDate,city
--- FROM OverlappingYearsMax
--- WHERE endYear - startYear >= 2 );
-
-
-
--- CREATE VIEW min AS
--- (SELECT  owner as homeowner, listingID, startYear as year
--- FROM OverlappingYearsMin
--- WHERE startYear != endYear 
--- GROUP BY owner, listingID, startYear)
--- union
--- (SELECT  owner as homeowner, listingID, endYear as year,city
--- FROM OverlappingYearsMin
--- WHERE startYear != endYear )
--- union
--- (SELECT  owner as homeowner, listingID,startYear as year, city
--- FROM OverlappingYearsMin
--- WHERE startYear = endYear );
-
-
-
-
-
-
-
+-- Solution
+SELECT DISTINCT 
+	owner as homeowner,
+	listingID,
+	year,
+	city
+FROM Solution
+ORDER BY owner, listingID, year, city;
 
 
+-- Clear views
+DROP VIEW IF EXISTS Solution CASCADE;
+DROP VIEW IF EXISTS NullViolators CASCADE;
+DROP VIEW IF EXISTS MaxViolators CASCADE;
+DROP VIEW IF EXISTS MinViolators CASCADE;
+DROP VIEW IF EXISTS BookingDayGroups CASCADE;
+DROP VIEW IF EXISTS BookingDaySeries CASCADE;
+DROP VIEW IF EXISTS ValidBookings CASCADE;
+DROP VIEW IF EXISTS InvalidOverlaps CASCADE;
+DROP VIEW IF EXISTS StartEndDatesByBookings CASCADE;
