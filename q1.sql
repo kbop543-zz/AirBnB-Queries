@@ -1,17 +1,29 @@
 SET search_path TO bnb, public;
 
+/*
+According to Piazza:
+https://piazza.com/class/isyrturax8v7iu?cid=368
+https://piazza.com/class/isyrturax8v7iu?cid=545
+https://piazza.com/class/isyrturax8v7iu?cid=534
+
+There seems to be some conflicting informtion. For this question, will assume last 10 completed years as being January 1, 2006 - January 1, 2016
+*/
+
+
 -- All bookings made for each traveler
 CREATE VIEW TotalBookings AS
 SELECT travelerId, date_part('year', startdate) AS year, count(*) AS numBooking
 FROM booking
-WHERE startdate >= (current_date - interval '1 year' * 10)
+-- WHERE startdate >= (current_date - interval '1 year' * 10)
+WHERE startdate >= '2006-01-01' AND startdate < '2016-01-01' 
 GROUP BY travelerId, date_part('year', startdate);
 
 -- All Requests made for each traveler
 CREATE VIEW TotalRequests AS 
 SELECT travelerId, date_part('year', startdate) AS year, count(*) AS numRequests
 FROM BookingRequest
-WHERE startdate >= (current_date - interval '1 year' * 10)
+-- WHERE startdate >= (current_date - interval '1 year' * 10)
+WHERE startdate >= '2006-01-01' AND startdate < '2016-01-01' 
 GROUP BY travelerId, date_part('year', startdate);
 
 -- Combine Traveler list with total requests
