@@ -40,7 +40,7 @@ public class Assignment2 {
         }
       try {
         connection = DriverManager.getConnection(URL, username, password);
-        String set_path = "SET search_path TO bnb";
+        String set_path = "SET search_path TO bnb;";
         PreparedStatement prepared_statement = connection.prepareStatement(set_path);
         prepared_statement.execute();
         return true;
@@ -79,19 +79,32 @@ public class Assignment2 {
 
     try{
       ArrayList<String> travelers = new ArrayList<String>();
-       
-      String queryString = "SELECT travelerId FROM Traveler;";
-      PreparedStatement ps = connection.prepareStatement(queryString);
-
-      ResultSet rs = ps.executeQuery();
+      String set_path = "SET search_path TO bnb;";
+      String q1 = "CREATE VIEW test as SELECT * FROM Traveler;";
+      String q2 = "SELECT * FROM test;";
+      //PreparedStatement ps = connection.prepareStatement(queryString);
+      
+      Statement stt = connection.createStatement();
+      stt.execute(set_path);
+      stt.executeUpdate(q1);
+      
+      
+      //PreparedStatement ps2 = connection.prepareStatement(queryString2);
+      //ResultSet rs = ps.executeQuery();
+      ResultSet rs = stt.executeQuery(q2);
+      System.out.println(rs);
 
       while(rs.next()){
-        String id = rs.getString("travelerId");
+        String id = rs.getString("travelerid");
         travelers.add(id);
 
       }
+      Statement st = connection.createStatement();
+      st.execute(set_path);
+      st.executeUpdate(q1);
       System.out.println(travelers);
       return(travelers);
+      
     } catch (SQLException s){
       return new ArrayList<String>();
     }
@@ -113,55 +126,74 @@ public class Assignment2 {
                                 
       
       try{
+        ArrayList<String> travelers = new ArrayList<String>();
         //hashmap of hashmaps
-        HashMap<Integer, HashMap<Integer, Float>> map = new HashMap<Integer, HashMap<Integer, Float>>();
-        //whole query                    
-        String queryString = "CREATE VIEW travelers AS \n"+
-"SELECT Traveler.TravelerId, Booking.listingId \n" +
-"FROM Traveler LEFT OUTER JOIN Booking ON Traveler.travelerID=Booking.travelerId \n"+
-"GROUP BY Traveler.travelerID, Booking.listingID \n"+
-"order by traveler.travelerID;\n\n"+ 
+        HashMap<Integer, ArrayList<HashMap<Integer, Float>>> map = new HashMap<Integer, ArrayList<HashMap<Integer, Float>>>();
+        //whole query    
+          
+        String set_path = "SET search_path TO bnb; ";     
+        String drop = "DROP VIEW IF EXISTS travelers,average, homeowners,rating cascade;";
+        String q1 = "CREATE VIEW travelers AS "+
+"SELECT Traveler.TravelerId, Booking.listingId " +
+"FROM Traveler LEFT OUTER JOIN Booking ON Traveler.travelerID=Booking.travelerId "+
+"GROUP BY Traveler.travelerID, Booking.listingID "+
+"order by traveler.travelerID;";
 
 
-"CREATE VIEW average AS \n"+
-"SELECT Travelers.TravelerId, travelers.listingId,avg(coalesce(TravelerRating.rating,0)) AS avg \n"+
-"FROM Travelers LEFT OUTER JOIN TravelerRating ON TravelerRating.listingID=Travelers.listingId \n"+
-"GROUP BY Travelers.travelerID,travelers.listingId \n"+
-"order by travelers.travelerID;\n"+
+String q2 = "CREATE VIEW average AS "+
+"SELECT Travelers.TravelerId, travelers.listingId,avg(coalesce(TravelerRating.rating,0)) AS avg "+
+"FROM Travelers LEFT OUTER JOIN TravelerRating ON TravelerRating.listingID=Travelers.listingId "+
+"GROUP BY Travelers.travelerID,travelers.listingId "+
+"order by travelers.travelerID; ";
 
-"CREATE VIEW homeowners AS \n"+
-"SELECT homeowner.homeownerid,listing.listingid FROM homeowner LEFT OUTER JOIN listing ON listing.owner = homeowner.homeownerid \n"+
-"GROUP BY homeowner.homeownerid,listing.listingid;\n \n"+
-"CREATE VIEW rating AS \n"+
-"SELECT homeowners.homeownerid,average.travelerid,coalesce(average.avg,0)::float as avg \n"+
-"FROM homeowners LEFT OUTER JOIN average ON homeowners.listingid = average.listingid \n"+
-"GROUP BY homeowners.homeownerid,average.travelerid,average.avg; \n"+
-"SELECT * \n"+
- "FROM rating; \n";
+String q3 ="CREATE VIEW homeowners AS "+
+"SELECT homeowner.homeownerid,listing.listingid FROM homeowner LEFT OUTER JOIN listing ON listing.owner = homeowner.homeownerid "+
+"GROUP BY homeowner.homeownerid,listing.listingid;";
 
- System.out.println(queryString);
+String q4 ="CREATE VIEW rating AS "+
+"SELECT homeowners.homeownerid,average.travelerid,coalesce(average.avg,0)::float as avg "+
+"FROM homeowners LEFT OUTER JOIN average ON homeowners.listingid = average.listingid "+
+"GROUP BY homeowners.homeownerid,average.travelerid,average.avg; ";
 
-      PreparedStatement ps = connection.prepareStatement(queryString);  
+String q5 = "SELECT * FROM rating; ";
+ 
+      Statement st = connection.createStatement();
+      st.execute(set_path);
+      st.executeUpdate(drop);
+      st.executeUpdate(q1);
+      st.executeUpdate(q2);
+      st.executeUpdate(q3);
+      st.executeUpdate(q4);
       
-
-      ResultSet rs = ps.executeQuery();
-      
+ 
+      ResultSet rs = st.executeQuery(q5);
+      System.out.println(rs);
   
 
       while(rs.next()){   
         //grab values from query                             
         int homeowner = rs.getInt("homeownerid"); 
+         System.out.println(homeowner);
          
-        int traveler = rs.getInt("travelerid");
+        int id = rs.getInt("travelerid");
+
          
         float avg =rs.getFloat("avg");
          
 
-        HashMap<Integer, Float> val = new HashMap<Integer, Float>();
-        val.put(traveler,avg); 
+       HashMap<Integer, Float> val = new HashMap<Integer, Float>();
+        val.put(id,avg); 
 
- 
-        map.put(homeowner,val);  
+        if(map.containsKey(homeowner)){
+           ArrayList<HashMap<Integer, Float>> key = map.get(homeowner);
+           key.add(val);
+           map.put(homeowner,key);
+      
+        }else{
+           ArrayList<HashMap<Integer, Float>> key = new ArrayList<HashMap<Integer, Float>>();
+           key.add(val);
+           map.put(homeowner,key);
+           }
 
         //I am formatting the dictionary like so {'4001':{[1002,1.5],[1001,1.4]},
         //'4002':{[1002,1.5],[1001,1.4]}....etc} so that to calculate the dot product
@@ -172,15 +204,18 @@ public class Assignment2 {
         //execute query isn't working.                         
 
       }
-      /*Object scores = map.get(homeownerID); //get the scores for the homeowner specified
+      
+      Object scores = map.get(homeownerID); //get the scores for the homeowner specified
       map.remove(homeownerID); //remove that homeowner from hashmap
 
       Iterator it = map.entrySet().iterator();
       while (it.hasNext()) {
 
-        Map.Entry pair = (Map.Entry)it.next();*/
+        Map.Entry pair = (Map.Entry)it.next();
+        }
 
-        System.out.println(map);
+       System.out.println(map);
+       //System.out.println(travelers);
         return map;
 
 
@@ -221,9 +256,11 @@ public class Assignment2 {
       String url = "jdbc:postgresql://localhost:5432/csc343h-steph191";
       a2.connectDB(url,"steph191","");
       
-      a2.selectTravelerId();
+      //a2.selectTravelerId();
 
-      a2.homeownerRecommendation(4001);
+     a2.homeownerRecommendation(4000);
+      
+      
 
       a2.disconnectDB();
    }
