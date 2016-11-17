@@ -1,10 +1,8 @@
 SET search_path TO bnb, public;
 
 /* CORRECTION: https://piazza.com/class/isyrturax8v7iu?cid=362
-
 Q5, Q8:  Clarification on HomeownerRating and TravelerRating: The HomeownerRating contains the ratings 
 the homeowner makes (of a traveler) and the TravelerRating contains the ratings a traveler makes (of the homeowner). 
-
 */
 
 -- List of all homeowners and their bnb ratings
