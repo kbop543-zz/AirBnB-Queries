@@ -5,7 +5,7 @@ DROP VIEW avgRequests CASCADE;
 DROP VIEW TotalTravelers CASCADE;
 DROP VIEW RequestsNotInBooking CASCADE;
 DROP VIEW TotalRequests CASCADE;
-DROP VIEW Step1 CASCADE;
+DROP VIEW GrabCorrectTie CASCADE;
 
 
 
@@ -41,7 +41,7 @@ group by
 
 
 --get all travelers who has ten times the average booking requests that has never booked anything
-CREATE VIEW Step0 AS
+CREATE VIEW GetScrapers AS
 SELECT 
 	RequestsNotInBooking.travelerId,
 	RequestsNotInBooking.numRequests,
@@ -60,54 +60,54 @@ HAVING
 	RequestsNotInBooking.numRequests > TotalRequests.num/TotalTravelers.num::numeric * 10;
 
 --get most requested city
-CREATE VIEW StepUm AS
+CREATE VIEW MostRequestedCity AS
 SELECT 
 	travelerId,
 	max(numRequests) as numRequests
-FROM Step0
+FROM GetScrapers
 GROUP BY travelerId;
 
 --get max cities alphabetically if there is a tie
-CREATE VIEW Step1 AS
+CREATE VIEW GrabCorrectTie AS
 SELECT 
-	StepUm.travelerId, 
-	StepUm.numRequests, 
+	MostRequestedCity.travelerId, 
+	MostRequestedCity.numRequests, 
 	min(Listing.city) as mostRequestedCity
 FROM 
-	StepUm,
-	Step0,
+	MostRequestedCity,
+	GetScrapers,
 	Listing
 WHERE 
-	StepUm.travelerID = Step0.travelerID  
+	MostRequestedCity.travelerID = GetScrapers.travelerID  
 	and 
-	Step0.listingId = Listing.listingId
+	GetScrapers.listingId = Listing.listingId
 GROUP BY 
-	StepUm.travelerId,StepUm.numRequests;
+	MostRequestedCity.travelerId,MostRequestedCity.numRequests;
 
 
 --get personal details of the traveler with most requested city that comes alphabetically first, 
 --in the order that was dictated on the handout
-CREATE VIEW Step2 AS
+CREATE VIEW Answer AS
 SELECT distinct 
 	Traveler.travelerId,
 	Traveler.firstname || ' ' || Traveler.surname as name, 
 	coalesce(Traveler.email,'unknown') as email,
-	Step1.mostRequestedCity,
-	Step1.numRequests
+	GrabCorrectTie.mostRequestedCity,
+	GrabCorrectTie.numRequests
 FROM 
-	Step1,
+	GrabCorrectTie,
 	Traveler, 
 	Listing,
-	Step0
+	GetScrapers
 WHERE 
-	Step1.travelerId = Traveler.travelerId 
+	GrabCorrectTie.travelerId = Traveler.travelerId 
 	and 
-	Step0.numRequests = Step1.numRequests 
+	GetScrapers.numRequests = GrabCorrectTie.numRequests 
 ORDER BY 
-	Step1.numRequests DESC, 
+	GrabCorrectTie.numRequests DESC, 
 	Traveler.travelerId ASC;
 
-SELECT * FROM STEP2;
+SELECT * FROM Answer;
 
 
 
