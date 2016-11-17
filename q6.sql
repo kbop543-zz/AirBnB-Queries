@@ -37,7 +37,8 @@ WHERE Traveler.travelerID = CommittedTravelers.travelerID
 AND CommittedTravelers.travelerID = BookingCounts.travelerID
 ORDER BY CommittedTravelers.TravelerID ASC;
 
+-- Clear Views
 DROP VIEW IF EXISTS CommittedTravelers;
 DROP VIEW IF EXISTS BookingCounts CASCADE;
 DROP VIEW IF EXISTS NoOverlap CASCADE;
-DROP VIEW IF EXISTS Overlap CASCADE;
+DROP VIEW IF EXISTS Overlap CASCADE; 
