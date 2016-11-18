@@ -1,13 +1,5 @@
 SET search_path TO bnb, public;
 
-DROP VIEW TotalBookings CASCADE;
-DROP VIEW avgRequests CASCADE;
-DROP VIEW TotalTravelers CASCADE;
-DROP VIEW RequestsNotInBooking CASCADE;
-DROP VIEW TotalRequests CASCADE;
-DROP VIEW GrabCorrectTie CASCADE;
-
-
 
 --get all travelers to calculate average
  CREATE VIEW TotalTravelers AS
@@ -110,16 +102,11 @@ ORDER BY
 SELECT * FROM Answer;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- Clear Views
+DROP VIEW IF EXISTS Answer;
+DROP VIEW IF EXISTS GrabCorrectTie CASCADE;
+DROP VIEW IF EXISTS MostRequestedCity CASCADE;
+DROP VIEW IF EXISTS GetScrapers CASCADE;
+DROP VIEW IF EXISTS RequestsNotInBooking CASCADE;
+DROP VIEW IF EXISTS TotalRequests CASCADE;
+DROP VIEW IF EXISTS TotalTravelers CASCADE;
