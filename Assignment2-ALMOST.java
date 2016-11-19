@@ -89,7 +89,7 @@ public class Assignment2 {
             
             // Check if the homeowner exists in the TravelerRating and Listing tables
             String firstcheck = "SELECT Listing.owner FROM TravelerRating, Listing "+
-                                "WHERE TravelerRating.listingId = Listing.listingId"+
+                                "WHERE TravelerRating.listingId = Listing.listingId "+
                                 "AND Listing.owner = ?"+";";
 
             String drop = "DROP VIEW IF EXISTS ScoreTable, rating2, rating, homeowners, average, travelers CASCADE;";
@@ -101,7 +101,7 @@ public class Assignment2 {
                         "ORDER BY traveler.travelerID;";
 
             String q2 = "CREATE VIEW average AS "+
-                        "SELECT Travelers.TravelerId, travelers.listingId, avg(coalesce(TravelerRating.rating,0)) AS avg"+
+                        "SELECT Travelers.TravelerId, travelers.listingId, avg(coalesce(TravelerRating.rating,0)) AS avg "+
                         "FROM Travelers LEFT OUTER JOIN TravelerRating ON TravelerRating.listingID=Travelers.listingId "+
                         "GROUP BY Travelers.travelerID, travelers.listingId "+
                         "ORDER BY travelers.travelerID;";
@@ -116,8 +116,8 @@ public class Assignment2 {
                         "FROM homeowners LEFT OUTER JOIN average ON homeowners.listingid = average.listingid "+
                         "GROUP BY homeowners.homeownerid,average.travelerid,average.avg;";
 
-            String q5 = "CREATE VIEW rating2 AS"+
-                        "SELECT"+
+            String q5 = "CREATE VIEW rating2 AS "+
+                        "SELECT "+
                         "R1.homeownerid AS R1homeownerid, "+
                         "R1.travelerid AS R1travelerid, "+
                         "R1.avg AS R1avg, "+
