@@ -134,18 +134,20 @@ public class Assignment2 {
                         " GROUP BY R1homeownerid, R2homeownerid"+
                         " ORDER BY sum(multiplier) DESC, R2homeownerid ASC;";
             
-            // Execute first check
+            // Execute first check to see if homeowner even exists
             PreparedStatement ps = connection.prepareStatement(firstcheck);
                 ps.setInt(1, homeownerID);
             
             ResultSet rs = ps.executeQuery();
 
             // If homeowner does not exist in listing or travelerRating tables
+            // return null
             if (!rs.isBeforeFirst() ) {    
-                System.out.println("Owner does not exist or have any ratings.");
+                // System.out.println("Owner does not exist or have any ratings.");
                 return null;
             } 
 
+            // Execute recommended homeowner queries
             Statement st = connection.createStatement();
                 st.executeUpdate(drop);
                 st.executeUpdate(q1);
@@ -161,19 +163,18 @@ public class Assignment2 {
             
             // If homeowner inputted is the only rated homeowner in travelerratings
             if (!rs2.isBeforeFirst() ) {    
-                System.out.println("There are no other homeowners to compare.");
+                // System.out.println("There are no other homeowners to compare.");
                 return null;
             } 
             
-            // limit recommended list to 10 and include ties if any
+            // limit recommended list to 10 and include ties, if any
             int count = 0;
+
             while(rs2.next()){
                 
-                // need a List of Hashmaps here.
                 //grab values from q6
                 int recHomeowners = rs2.getInt("R2homeownerid");
                 int recHomeownerScore = rs2.getInt("scores");
-                // System.out.println("grabbed homeownerId: " + recHomeowners);
                 
                 // Do not add homeowners with scores of 0
                 if (recHomeownerScore == 0) {
@@ -193,19 +194,18 @@ public class Assignment2 {
                         break;
                     }
                 }
-                // System.out.println("Count is: " + count);
                 count++;
             }
 
-            System.out.println(recommendedList);
+            // System.out.println(recommendedList);
             // System.out.println(recommendedListScores);
             return recommendedList;
                                            
         } catch (SQLException s){                                 
-            System.err.println("SQL Exception." + "<Message>: " + s.getMessage());
+            System.err.println("SQL Exception caught: " + s.getMessage());
             return null; 
         }
-        // return recommendedList;
+        
  }
 
 
@@ -257,61 +257,59 @@ public class Assignment2 {
                 ps.setInt(1, requestId);
                 ps.setDate(2, sqlStartDate);
                 ps.setInt(3, numNights);
-                ps.setInt(4, price);  
-                // ps.execute();
+                ps.setInt(4, price); 
+               
             
             ResultSet rs = ps.executeQuery();
 
-        // First check, does request even exist in the bookingrequest table
-        if (!rs.isBeforeFirst() ) {    
-            System.out.println("Booking request does not exist.");
-            return false;
-        } 
-        // If result set is not empty, go to second check
-        while(rs.next()){
-                                 
-            // Get the listing ID from the first resultset
-            int rsTravelerId = rs.getInt("travelerId");
-            int rsListingId = rs.getInt("listingid");
-            int rsnumGuests = rs.getInt("numGuests");
-            System.out.println(rsListingId);
-
-            // Second check, see if request is already in the booking table
-            PreparedStatement ps2 = connection.prepareStatement(checkInBooking);
-                ps2.setInt(1, requestId);
-                ps2.setDate(2, sqlStartDate);
-                ps2.setInt(3, numNights);
-                ps2.setInt(4, price);  
-
-            ResultSet rs2 = ps2.executeQuery();
-
-            // If booking request is not already recorded, insert it 
-            if (!rs2.isBeforeFirst() ) {    
-                
-                PreparedStatement ps3 = connection.prepareStatement(insertInBooking);
-                    ps3.setInt(1, rsListingId);
-                    ps3.setDate(2, sqlStartDate);
-                    ps3.setInt(3, rsTravelerId);
-                    ps3.setInt(4, numNights);  
-                    ps3.setInt(5, rsnumGuests);
-                    ps3.setInt(6, price);
-                    ps3.executeQuery();
-                return true;
+            // First check, does request even exist in the bookingrequest table
+            if (!rs.isBeforeFirst() ) {    
+                System.out.println("This request does not exist in the booking request table.");
+                return false;
             } 
+            // If result set is not empty, go to second check
+            while(rs.next()){
+                                     
+                // Get the listing ID from the first resultset
+                int rsTravelerId = rs.getInt("travelerId");
+                int rsListingId = rs.getInt("listingid");
+                int rsnumGuests = rs.getInt("numGuests");
 
-            // booking request has already been recorded, return true
-            while(rs2.next()){
-                System.out.println("Booking request is already recorded.");
-                return true;
+                // Second check, see if request is already in the booking table
+                PreparedStatement ps2 = connection.prepareStatement(checkInBooking);
+                    ps2.setInt(1, requestId);
+                    ps2.setDate(2, sqlStartDate);
+                    ps2.setInt(3, numNights);
+                    ps2.setInt(4, price);  
+
+                ResultSet rs2 = ps2.executeQuery();
+
+                // If booking request is not already recorded, insert it 
+                if (!rs2.isBeforeFirst() ) {    
+                    
+                    PreparedStatement ps3 = connection.prepareStatement(insertInBooking);
+                        ps3.setInt(1, rsListingId);
+                        ps3.setDate(2, sqlStartDate);
+                        ps3.setInt(3, rsTravelerId);
+                        ps3.setInt(4, numNights);  
+                        ps3.setInt(5, rsnumGuests);
+                        ps3.setInt(6, price);
+                        ps3.executeUpdate();
+                    return true;
+                } 
+
+                // booking request has already been recorded, return true
+                while(rs2.next()){
+                    System.out.println("Booking request is already recorded in Bookings!");
+                    return true;
+                }
+
             }
+            return true;
 
+        } catch (SQLException s){
+            System.err.println("SQL Exception caught: " + s.getMessage());
         }
-        return true;
-
-
-    } catch (SQLException s){
-        System.err.println("SQL Exception." + "<Message>: " + s.getMessage());
-    }
         System.out.println("Operation failed");
         return false;
    }
@@ -321,19 +319,18 @@ public class Assignment2 {
    public static void main(String[] args) {
     /* 
     You can put testing code in here. It will not affect our autotester.
-    Note: to run this program: 
-    'javac Assignment2.java' 
-    'java -cp /local/packages/jdbc-postgresql/postgresql-9.4.1212.jar: Assignment2'
+        Note to self: to run this program: 
+        'javac Assignment2.java' 
+        'java -cp /local/packages/jdbc-postgresql/postgresql-9.4.1212.jar: Assignment2'
     */
         try {
             Assignment2 a2 = new Assignment2();
             String url = "jdbc:postgresql://localhost:5432/csc343h-ngsunny";
             a2.connectDB(url,"ngsunny","");
 
-            a2.homeownerRecommendation(4000);
-
-            //SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd");
-            //a2.booking(6003, ft.parse("2001-10-05"), 2, 100);
+            // a2.homeownerRecommendation(4000);
+            // SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd");
+            // a2.booking(6000, ft.parse("2016-10-05"), 2, 120);
 
             a2.disconnectDB();
         } catch(Exception e) {   
