@@ -95,15 +95,14 @@ public class Assignment2 {
             String drop = "DROP VIEW IF EXISTS rating2, rating, homeowners, average, travelers CASCADE;";
 
             String q1 = "CREATE VIEW travelers AS"+
-                        " SELECT Traveler.TravelerId, Booking.listingId" +
+                        " SELECT Traveler.TravelerId, Booking.listingId, Booking.startDate" +
                         " FROM Traveler LEFT OUTER JOIN Booking ON Traveler.travelerID=Booking.travelerId"+
-                        " GROUP BY Traveler.travelerID, Booking.listingID"+
                         " ORDER BY traveler.travelerID;";
 
             String q2 = "CREATE VIEW average AS"+
                         " SELECT Travelers.TravelerId, travelers.listingId, avg(coalesce(TravelerRating.rating,0)) AS avg"+
-                        " FROM Travelers LEFT OUTER JOIN TravelerRating ON TravelerRating.listingID=Travelers.listingId"+
-                        " GROUP BY Travelers.travelerID, travelers.listingId "+
+                        " FROM Travelers LEFT OUTER JOIN TravelerRating ON TravelerRating.listingID=Travelers.listingId AND Travelers.startDate = TravelerRating.startDate"+
+                        " GROUP BY Travelers.travelerID, travelers.listingId"+
                         " ORDER BY travelers.travelerID;";
  
             String q3 = "CREATE VIEW homeowners AS"+
@@ -133,7 +132,7 @@ public class Assignment2 {
                         " FROM rating2"+
                         " WHERE R1homeownerid = ?"+
                         " GROUP BY R1homeownerid, R2homeownerid"+
-                        " ORDER BY sum(multiplier) DESC;";
+                        " ORDER BY sum(multiplier) DESC, R2homeownerid ASC;";
             
             // Execute first check
             PreparedStatement ps = connection.prepareStatement(firstcheck);
@@ -174,8 +173,12 @@ public class Assignment2 {
                 //grab values from q6
                 int recHomeowners = rs2.getInt("R2homeownerid");
                 int recHomeownerScore = rs2.getInt("scores");
-                System.out.println("grabbed homeownerId: " + recHomeowners);
+                // System.out.println("grabbed homeownerId: " + recHomeowners);
                 
+                // Do not add homeowners with scores of 0
+                if (recHomeownerScore == 0) {
+                    break;
+                }
                 
                 // Keep adding to the recommendedList if count is under 10
                 if (count < 10) {
@@ -190,12 +193,12 @@ public class Assignment2 {
                         break;
                     }
                 }
-                System.out.println("Count is: " + count);
+                // System.out.println("Count is: " + count);
                 count++;
             }
 
             System.out.println(recommendedList);
-            System.out.println(recommendedListScores);
+            // System.out.println(recommendedListScores);
             return recommendedList;
                                            
         } catch (SQLException s){                                 
