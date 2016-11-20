@@ -194,13 +194,15 @@ public class Assignment2 {
                 count++;
             }
 
-            // System.out.println(recommendedList);
+            System.out.println(recommendedList);
+            System.out.println(recommendedListScores);
             return recommendedList;
                                            
         } catch (SQLException s){                                 
             System.err.println("SQL Exception." + "<Message>: " + s.getMessage());
             return null; 
         }
+        // return recommendedList;
  }
 
 
