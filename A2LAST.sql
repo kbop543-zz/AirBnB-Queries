@@ -8,15 +8,15 @@ DROP VIEW IF EXISTS travelers CASCADE;
 
 
 CREATE VIEW travelers AS                        
-SELECT Traveler.TravelerId, Booking.listingId
+SELECT Traveler.TravelerId, Booking.listingId, Booking.startdate
 FROM Traveler LEFT OUTER JOIN Booking ON Traveler.travelerID=Booking.travelerId
-GROUP BY Traveler.travelerID, Booking.listingID
+GROUP BY Traveler.travelerID, Booking.listingID,Booking.startdate
 ORDER BY traveler.travelerID;
 
 CREATE VIEW average AS 
 	SELECT Travelers.TravelerId, 
 	travelers.listingId,avg(coalesce(TravelerRating.rating,0)) AS avg 
-	FROM Travelers LEFT OUTER JOIN TravelerRating ON TravelerRating.listingID=Travelers.listingId
+	FROM Travelers LEFT OUTER JOIN TravelerRating ON TravelerRating.listingID=Travelers.listingId AND Travelers.startdate = TravelerRating.startdate
 	GROUP BY Travelers.travelerID,travelers.listingId
 	ORDER BY travelers.travelerID;
 
@@ -58,3 +58,10 @@ GROUP BY
 	R1homeownerid, R2homeownerid
 ORDER BY
 	sum(multiplier) DESC;
+
+SELECT * from Travelers;
+SELECT * FROM average;
+SELECT * FROM homeowners;
+SELECT * FROM rating;
+SELECT * FROM rating2;
+SELECT * FROM Scoretable;
